@@ -99,7 +99,9 @@ def create_profile():
 # Search shell
 @app.route('/search', methods=['POST'])
 def search():
-    pass
+    if not g.search_form.validate_on_submit():
+        return redirect(url_for('index'))
+    return redirect(url_for('search_results', query = g.search_form.search.data))
 
 @app.route('/autocomplete', methods=['POST'])
 def autocomplete():
@@ -116,3 +118,11 @@ def autocomplete():
         pass
 
     return json.dumps({ "options": predictions})
+
+@app.route('/search_results/<query>')
+@login_required
+def search_results(query):
+    results = 'test'
+    return render_template('search_results.html',
+        query = query,
+        results = results)
