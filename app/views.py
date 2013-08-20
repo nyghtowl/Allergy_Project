@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, session, url_for, request, j
 from app import db, app, login_manager
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from models import User
-# from forms import LoginForm, CreateLogin
+from forms import LoginForm, EditProfile, SearchForm
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -68,7 +68,7 @@ def logout():
 
 @app.route('/create_profile', methods = ['POST', 'GET'])
 def create_profile():
-    form = CreateProfile()
+    form = EditProfile()
 
     if form.validate_on_submit():
 
