@@ -7,8 +7,8 @@ from signal import signal, SIGPIPE, SIG_DFL
 #Ignore SIG_PIPE and don't throw exceptions on it... (http://docs.python.org/library/signal.html)
 signal(SIGPIPE,SIG_DFL) 
 
-
-SECRET_KEY = os.environ.get('key')
+SECRET_KEY = 'key'
+# SECRET_KEY = os.environ.get('key')
 
 CSRF_ENABLED = True
 

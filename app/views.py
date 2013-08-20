@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, session, url_for, request, j
 from app import db, app, login_manager
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from models import User
-from forms import LoginForm, CreateLogin
+# from forms import LoginForm, CreateLogin
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -18,12 +18,12 @@ def before_request():
         db.session.add(g.user)
         db.session.commit()
 
-@app.after_request
-def after_request(response):
-    for query in get_debug_queries():
-        if query.duration >= DATABASE_QUERY_TIMEOUT:
-            app.logger.warning('SLOW QUERY: %s\nParameters: %s\nDuration: %fs\Context: %s\n') % (query.statement, query.parameters, query.duration, query.context)
-    return response
+# @app.after_request
+# def after_request(response):
+#     for query in get_debug_queries():
+#         if query.duration >= DATABASE_QUERY_TIMEOUT:
+#             app.logger.warning('SLOW QUERY: %s\nParameters: %s\nDuration: %fs\Context: %s\n') % (query.statement, query.parameters, query.duration, query.context)
+#     return response
 
 @app.errorhandler(404)
 def internal_error(error):
@@ -99,6 +99,7 @@ def create_profile():
 # Search shell
 @app.route('/search', methods=['POST'])
 def search():
+    pass
 
 @app.route('/autocomplete', methods=['POST'])
 def autocomplete():
@@ -112,5 +113,6 @@ def autocomplete():
     if txt_so_far:
         # Search for allergies and return most frequently used
         # based on each letter typed
+        pass
 
     return json.dumps({ "options": predictions})
