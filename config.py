@@ -21,8 +21,11 @@ if os.environ.get('DATABASE_URL') is None:
 else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 
-
 # Stores migrate data files
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 
+# Use get_debug_queries function
+SQLALCHEMY_RECORD_QUERIES = True
 
+# Threashold for slow loading (in seconds)
+DATABASE_QUERY_TIMEOUT = 0.5
