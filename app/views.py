@@ -1,14 +1,16 @@
 from flask import render_template, flash, redirect, session, url_for, request, jsonify, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, login_manager
+from app import app, db, login_manager, oid
 from forms import LoginForm, EditProfile, SearchForm
-from models import User
-from config 
+from models import User, ROLE_USER, ROLE_ADMIN
+from config import DATABASE_QUERY_TIMEOUT
 
+# Load user from database
 @login_manager.user_loader
 def load_user(user_id):
   return User.query.get(int(user_id))
 
+# Hook before reques to check user loggged in
 @app.before_request
 def before_request():
     g.user = current_user
@@ -18,13 +20,15 @@ def before_request():
         g.user.last_seen = datetime.utcnow()
         db.session.add(g.user)
         db.session.commit()
+        g.search_form=SearchForm()
 
-# @app.after_request
-# def after_request(response):
-#     for query in get_debug_queries():
-#         if query.duration >= DATABASE_QUERY_TIMEOUT:
-#             app.logger.warning('SLOW QUERY: %s\nParameters: %s\nDuration: %fs\Context: %s\n') % (query.statement, query.parameters, query.duration, query.context)
-#     return response
+# Hook after each request that checks if alerts needed
+@app.after_request
+def after_request(response):
+    for query in get_debug_queries():
+        if query.duration >= DATABASE_QUERY_TIMEOUT:
+            app.logger.warning('SLOW QUERY: %s\nParameters: %s\nDuration: %fs\Context: %s\n') % (query.statement, query.parameters, query.duration, query.context)
+    return response
 
 @app.errorhandler(404)
 def internal_error(error):
@@ -42,22 +46,52 @@ def index():
 
 
 @app.route('/login', methods=['GET', 'POST'])
+@oid.loginhandler #oid
 def login():
+    if g.user is not None and g.user.is_authenticated():
+        return redirect(url_for('login'))
+    
     form = LoginForm()
 
     # Validate login
     if form.validate_on_submit():
-        user = User.query.filter(User.email==form.email.data).first()
- 
-        # If user exists then apply login user functionatlity to generate current_user session
-        if user is not None:
-            user_password = user.password
-            login_user(user)
-            flash('Logged in successfully.')
-            return redirect(url_for('search'))
-        else:
-            flash('Your email or password are incorrect. Please login again.')
-    return render_template('login.html', form=form)
+        session['remember_me'] = form.remember_me.data
+        return oid.try_login(form.openid.data, ask_for = ['nickname', 'email']) 
+
+    return render_template('login.html', form=form, providers = app.config['OPENID_PROVIDERS'])
+
+
+# Triggered after oid.try_login
+@oid.after_login
+def after_login(resp):
+    # If no email then cannot login
+    if resp.email is None or resp.email == "":
+        flash(gettext('Invalid login. Please try again.'))
+        return redirect(url_for('login'))
+    user = User.query.filter_by(email = resp.email).first()
+
+    # If email is not found then treat like new user and generate nickname from email
+    if user is None:
+        nickname = resp.nickname
+        if nickname is None or nickname == "":
+            nickname = resp.email.split('@')[0]
+        nickname = User.make_valid_nickname(nickname)
+        nickname = User.make_unique_nickname(nickname)
+        user = User(nickname = nickname, email = resp.email, role = ROLE_USER)
+        db.session.add(user)
+        db.session.commit()
+
+    remember_me = False
+
+    # Check session remember_me and login user
+    if 'remember_me' in session:
+        remember_me = session['remember_me']
+        session.pop('remember_me', None)
+    login_user(user, remember = remember_me)
+    flash('Logged in successfully.')
+
+
+    return redirect(request.args.get('next') or url_for('index'))
 
 @app.route('/logout')
 @login_required # Confirms login
