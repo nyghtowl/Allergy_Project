@@ -8,6 +8,24 @@ Collaborative project to build a web application that will take in an individual
 
 This is open source and contributions are welcome. 
 
+To use (command line commands written below directions):
+```bash
+    # Clone repsitory into a folder
+    git clone https://github.com/nyghtowl/Allergy_Project.git
+    # Setup virtualenv
+    virtualenv env
+    # Start virtualenv
+    source env/bin/activate
+    # Install requirements document
+    pip install -r requirements.txt 
+    # Create a local postgresql database called allergy_db (find or setup superuser)
+    createdb -O <superuser> <dbname>
+    # Define config keys locally in activate file under env/bin
+    # Run files with python
+    python run.py
+
+
+```
 
 ----
 

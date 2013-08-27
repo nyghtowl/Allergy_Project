@@ -1,8 +1,9 @@
 from flask import render_template, flash, redirect, session, url_for, request, jsonify, g
-from app import db, app, login_manager
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from models import User
+from app import app, db, login_manager
 from forms import LoginForm, EditProfile, SearchForm
+from models import User
+from config 
 
 @login_manager.user_loader
 def load_user(user_id):
