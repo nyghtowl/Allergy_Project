@@ -1,5 +1,6 @@
 from flask import render_template, flash, redirect, session, url_for, request, jsonify, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask.ext.sqlalchemy import get_debug_queries
 from app import app, db, login_manager, oid
 from forms import LoginForm, EditProfile, SearchForm
 from models import User, ROLE_USER, ROLE_ADMIN
