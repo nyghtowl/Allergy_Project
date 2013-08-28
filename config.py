@@ -29,3 +29,8 @@ SQLALCHEMY_RECORD_QUERIES = True
 
 # Threashold for slow loading (in seconds)
 DATABASE_QUERY_TIMEOUT = 0.5
+
+OPENID_PROVIDERS = [
+    { 'name': 'Google', 'url': 'https://www.google.com/accounts/o8/id' },
+    { 'name': 'Flickr', 'url': 'http://www.flickr.com/<username>' },
+    { 'name': 'MyOpenID', 'url': 'https://www.myopenid.com' }
