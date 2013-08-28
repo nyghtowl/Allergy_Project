@@ -1,7 +1,8 @@
 from flask import render_template, flash, redirect, session, url_for, request, jsonify, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask.ext.sqlalchemy import get_debug_queries
 from app import app, db, login_manager, oid
-from forms import LoginForm, EditProfile, SearchForm
+from forms import LoginForm, EditForm, SearchForm
 from models import User, ROLE_USER, ROLE_ADMIN
 from config import DATABASE_QUERY_TIMEOUT
 
@@ -100,36 +101,68 @@ def logout():
     flash('You are now logged out')
     return redirect(url_for('index'))
 
+@app.route('/user/<nickname>')
+@login_required # Restricts page access without login
+def user(nickname):
+    user = User.query.filter_by(nickname = nickname).first()
+    if user == None:
+        flash('User %(nickname)s not found.', nickname = nickname)
+        return redirect(url_for('index'))
+    return render_template("user.html", 
+        user = user)
 
-@app.route('/create_profile', methods = ['POST', 'GET'])
-def create_profile():
-    form = EditProfile()
-
+@app.route('/edit', methods = ['GET', 'POST'])
+@login_required
+def edit():
+    form = EditForm(g.user.nickname)
     if form.validate_on_submit():
+        g.user.nickname = form.nickname.data
+        g.user.about_me = form.about_me.data
+        g.user.fname=form.fname.data,
+        g.user.lname=form.lname.data,
+        g.user.mobile=form.mobile.data,
+        g.user.zipcode=form.zipcode.data,
+        g.user.accept_tos=True,
+        g.user.timestamp=time.time()
+        db.session.add(g.user)
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('edit'))
+    elif request.method != "POST":
+        form.nickname.data = g.user.nickname
+        form.about_me.data = g.user.about_me
+    return render_template('edit.html', form = form)
 
-        user = User.query.filter(User.email==form.email.data).first()
+# Fix create_profile
+# @app.route('/create_profile', methods = ['POST', 'GET'])
+# def create_profile():
+#     form = EditProfile(g.user.nickname)
 
-        if user != None:
-            user_email = user.email
-            if user_email == form.email.data:
-                flash ('%(email)s already exists. Please login or enter a different email.', email = user_email)
-                return redirect(url_for('login'))
-        # If user doesn't exist, save from data in User object to commit to db
-        if user == None:
-            new_user = User(id = None,
-                        email=form.email.data,
-                        password=form.password.data,
-                        fname=form.fname.data,
-                        lname=form.lname.data,
-                        mobile=form.mobile.data,
-                        zipcode=form.zipcode.data,
-                        accept_tos=True,
-                        timestamp=time.time())
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Account creation successful. Please login to your account.')
-            return redirect(url_for('index'))
-    return render_template('create_login.html', form=form)
+#     if form.validate_on_submit():
+
+#         user = User.query.filter(User.email==form.email.data).first()
+
+#         if user != None:
+#             user_email = user.email
+#             if user_email == form.email.data:
+#                 flash ('%(email)s already exists. Please login or enter a different email.', email = user_email)
+#                 return redirect(url_for('login'))
+#         # If user doesn't exist, save from data in User object to commit to db
+#         if user == None:
+#             new_user = User(id = None,
+#                         email=form.email.data,
+#                         password=form.password.data,
+#                         fname=form.fname.data,
+#                         lname=form.lname.data,
+#                         mobile=form.mobile.data,
+#                         zipcode=form.zipcode.data,
+#                         accept_tos=True,
+#                         timestamp=time.time())
+#             db.session.add(new_user)
+#             db.session.commit()
+#             flash('Account creation successful. Please login to your account.')
+#             return redirect(url_for('index'))
+#     return render_template('create_login.html', form=form)
 
 # Search shell
 @app.route('/search', methods=['POST'])
