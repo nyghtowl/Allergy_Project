@@ -1,0 +1,25 @@
+<!-- User Page -->
+
+{% extends "layout.html" %}
+
+{% block content %}
+{% include 'flash.html' %}
+	<div class="well well-large" style="height: 140px;">
+		<div class="pull-right">
+			<img src="{{ user.avatar(128) }}" class="img-polaroid">
+		</div>
+		<h1>{{ user.nickname }}</h1>
+		{% if user.about_me %}
+			<p>{{ user.about_me }}</p>
+		{% endif %}
+		<p><em>Last seen on: </em></p>
+		<p>Followers: {{ user.followers.count() - 1 }} | Following {{ user.followed.count() - 1 }} |
+		<!-- Conditional makes sure only that user can edit her/his profile-->
+		{% if user.id == g.user.id %}
+			<a href="{{ url_for('edit') }}">Edit your profile</a>
+		{% endif %}
+		</p>
+	</div>
+
+
+{% endblock %}
